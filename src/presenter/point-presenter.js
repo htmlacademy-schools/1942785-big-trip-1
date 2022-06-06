@@ -1,103 +1,110 @@
-import SiteWayPoint from '../view/site-waypoint';
-import SiteEditForm from '../view/site-edit-form';
-import {render, RenderPosition, replace, remove} from '../utils/render';
+import WaypointView from '../view/waypoint-view';
+import EventEditView from '../view/event-edit-view';
+import { render, RenderPosition, replace, remove } from '../render';
 
 const Mode = {
   DEFAULT: 'DEFAULT',
   EDITING: 'EDITING',
 };
 
+
 export default class PointPresenter {
-  #waypointsListElement = null;
-  #changeData = null;
-  #changeMode = null;
+    #tripPointsListElement = null;
+    #changeData = null;
+    #changeMode = null;
 
-  #waypointItemComponent = null;
-  #editFormComponent = null;
+    #waypointComponent = null;
+    #eventEditComponent = null;
 
-  #waypoint = null;
-  #mode = Mode.DEFAULT;
+    #point = null;
+    #mode = Mode.DEFAULT;
 
-  constructor(waypointsListElement, changeData, changeMode) {
-    this.#waypointsListElement = waypointsListElement;
-    this.#changeData = changeData;
-    this.#changeMode = changeMode;
-  }
-
-  init = (waypoint) => {
-    this.#waypoint = waypoint;
-
-    const prevWaypointComponent = this.#waypointItemComponent;
-    const prevEditComponent = this.#editFormComponent;
-
-    this.#waypointItemComponent = new SiteWayPoint(waypoint);
-    this.#editFormComponent = new SiteEditForm(waypoint);
-
-    this.#waypointItemComponent.setEditClickHandler(this.#handleEditClick);
-    this.#editFormComponent.setRollupClickHandler(this.#handleRollupClick);
-    this.#editFormComponent.setFormSubmitHandler(this.#handleFormSubmit);
-    this.#waypointItemComponent.setFavoriteClickHandler(this.#handleFavoriteClick);
-
-    if (prevWaypointComponent === null || prevEditComponent === null){
-      render(this.#waypointsListElement, this.#waypointItemComponent, RenderPosition.BEFOREEND);
-      return;
-    }
-    if (this.#mode === Mode.DEFAULT){
-      replace(this.#waypointItemComponent, prevWaypointComponent);
-    }
-    if (this.#mode === Mode.EDITING) {
-      replace(this.#editFormComponent, prevEditComponent);
+    constructor(tripPointsListElement, changeData, changeMode) {
+      this.#tripPointsListElement = tripPointsListElement;
+      this.#changeData = changeData;
+      this.#changeMode = changeMode;
     }
 
-    remove(prevWaypointComponent);
-    remove(prevEditComponent);
-  }
+    init = (point) => {
+      this.#point = point;
 
-  destroy = () => {
-    remove(this.#waypointItemComponent);
-    remove(this.#editFormComponent);
-  }
+      const prevWaypointComponent = this.#waypointComponent;
+      const prevEventEditComponent = this.#eventEditComponent;
 
-  resetView = () => {
-    if (this.#mode !== Mode.DEFAULT) {
+      this.#waypointComponent =  new WaypointView(point);
+      this.#eventEditComponent = new EventEditView(point);
+
+      this.#waypointComponent.setEditClickHandler(this.#handleEditClick);
+      this.#waypointComponent.setFavoriteClickHandler(this.#handleFavoriteClick);
+      this.#eventEditComponent.setRollupClickHandler(this.#handleRollupClick);
+      this.#eventEditComponent.setFormSubmitHandler(this.#handleFormSubmit);
+
+      if (prevWaypointComponent === null || prevEventEditComponent === null) {
+        render(this.#tripPointsListElement, this.#waypointComponent, RenderPosition.BEFOREEND);
+        return;
+      }
+
+      if (this.#mode === Mode.DEFAULT) {
+        replace(this.#waypointComponent, prevWaypointComponent);
+      }
+
+      if (this.#mode === Mode.EDITING) {
+        replace(this.#eventEditComponent, prevEventEditComponent);
+      }
+
+      remove(prevWaypointComponent);
+      remove(prevEventEditComponent);
+    }
+
+    destroy = () => {
+      remove(this.#waypointComponent);
+      remove(this.#eventEditComponent);
+    }
+
+    resetView = () => {
+      if (this.#mode !== Mode.DEFAULT) {
+        this.#eventEditComponent.reset(this.#point);
+        this.#replaceFormToItem();
+      }
+    }
+
+    #replaceItemToForm = () => {
+      replace(this.#eventEditComponent, this.#waypointComponent);
+      document.addEventListener('keydown', this.#escKeyDownHandler);
+      this.#changeMode();
+      this.#mode = Mode.EDITING;
+    }
+
+    #replaceFormToItem = () => {
+      replace(this.#waypointComponent, this.#eventEditComponent);
+      document.removeEventListener('keydown', this.#escKeyDownHandler);
+      this.#mode = Mode.DEFAULT;
+    }
+
+    #escKeyDownHandler = (evt) => {
+      if (evt.key === 'Escape' || evt.key === 'Esc') {
+        evt.preventDefault();
+        this.#eventEditComponent.reset(this.#point);
+        this.#replaceFormToItem();
+      }
+    };
+
+    #handleEditClick = () => {
+      this.#replaceItemToForm();
+    };
+
+    #handleRollupClick = () => {
+      this.#eventEditComponent.reset(this.#point);
       this.#replaceFormToItem();
+    };
+
+    #handleFavoriteClick = () => {
+      this.#changeData({...this.#point, isFavorite: !this.#point.isFavorite});
     }
-  }
 
-  #replaceItemToForm = () => {
-    replace(this.#editFormComponent, this.#waypointItemComponent);
-    document.addEventListener('keydown', this.#escKeyDownHandler);
-    this.#changeMode();
-    this.#mode = Mode.EDITING;
-  }
-
-  #replaceFormToItem = () => {
-    replace(this.#waypointItemComponent, this.#editFormComponent);
-    document.removeEventListener('keydown', this.#escKeyDownHandler);
-    this.#mode = Mode.DEFAULT;
-  }
-
-  #escKeyDownHandler = (event) => {
-    if (event.key === 'Escape' || event.key === 'Esc') {
-      event.preventDefault();
-      this.#replaceFormToItem();
-    }
-  };
-
-  #handleEditClick = () => {
-    this.#replaceItemToForm();
-  };
-
-  #handleRollupClick = () => {
-    this.#replaceFormToItem();
-  };
-
-  #handleFormSubmit = (waypoint) => {
-    this.#changeData(waypoint);
-    this.#replaceFormToItem();
-  };
-
-  #handleFavoriteClick = () => {
-    this.#changeData({...this.#waypoint, isFavorite: !this.#waypoint.isFavorite});
-  }
+      #handleFormSubmit = (tripPoint) => {
+        this.#changeData(tripPoint);
+        this.#replaceFormToItem();
+      };
 }
+

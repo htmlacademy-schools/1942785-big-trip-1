@@ -1,23 +1,22 @@
-import {render, RenderPosition} from './utils/render';
-import SiteNavigation from './view/site-navigation.js';
-import SiteFilters from './view/site-filters.js';
-import SiteInfo from './view/site-info.js';
-import { generateWaypoint } from './mock/waypoint.js';
-import TripPresenter from './presenter/trip-presenter.js';
+import { render, RenderPosition } from './render.js';
+import TripFiltersView from './view/trip-filters-view.js';
+import TripInfoView from './view/trip-info-view.js';
+import TripTabsView from './view/trip-tabs-view.js';
+import {generatePoint} from './mock/point.js';
+import TripPresenter from './presenter/trip-presenter';
 
-const count = 5;
-const wayPoint = Array.from({length: count}, generateWaypoint);
+const POINT_COUNT = 14;
 
+const points = Array.from({length: POINT_COUNT}, generatePoint);
 const pageMainElement = document.querySelector('.page-body');
 
-const siteNavigation = document.querySelector('.trip-controls__navigation');
-const siteFilters = document.querySelector('.trip-controls__filters');
+const siteTripMainElement = document.querySelector('.trip-main');
+const tripControlsNavigationElement = document.querySelector('.trip-controls__navigation');
+const tripControlsFiltersElement = document.querySelector('.trip-controls__filters');
 
-render(siteNavigation, new SiteNavigation(),RenderPosition.BEFOREEND);
-render(siteFilters, new SiteFilters(), RenderPosition.BEFOREEND);
+render(siteTripMainElement, new TripInfoView().element, RenderPosition.AFTERBEGIN);
+render(tripControlsNavigationElement, new TripTabsView(), RenderPosition.BEFOREEND);
+render(tripControlsFiltersElement, new TripFiltersView(), RenderPosition.BEFOREEND);
 
 const tripPresenter = new TripPresenter(pageMainElement);
-tripPresenter.init(wayPoint);
-if (wayPoint.length !== 0) {
-  render(siteNavigation, new SiteInfo(wayPoint), RenderPosition.BEFOREBEGIN);
-}
+tripPresenter.init(points);
