@@ -1,3 +1,5 @@
+import AbstractView from './abstract-view';
+
 export const createTripInfoTemplate = () => (
   `<section class="trip-main__trip-info  trip-info">
       <div class="trip-info__main">
@@ -9,3 +11,9 @@ export const createTripInfoTemplate = () => (
       </p>
     </section>`
 );
+
+export default class TripInfoView extends AbstractView {
+  get template() {
+    return createTripInfoTemplate();
+  }
+}

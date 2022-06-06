@@ -1,27 +1,14 @@
 import dayjs from 'dayjs';
-import {createElement} from '../render.js';
+import AbstractView from './abstract-view';
 
-const createWaypointTemplate = (waypoint) => {
-  const {wayPointType, destination, price, startDate, endDate, duration, offers, isFavorite} = waypoint;
+const createWaypointTemplate = (point) => {
+  const {waypointType, destination, price, startDate, endDate, duration, offers, isFavorite} = point;
   const startDay = dayjs(startDate).format('MMM D');
   const beginDate = dayjs(startDate).format('YYYY-MM-DD');
   const startTime = dayjs(startDate).format('HH:mm');
   const startDatetime = dayjs(startDate).format('YYYY-MM-DDTHH:mm');
   const endTime = dayjs(endDate).format('HH:mm');
   const endDatetime = dayjs(endDate).format('YYYY-MM-DDTHH:mm');
-
-  const isFavoriteClass = isFavorite ? ' event__favorite-btn--active' : '';
-  const createOfferMarkup = (offer) => {
-    if (offer.isChosen) {
-      const offerName = offer.name;
-      const offerPrice = offer.price;
-      return `<li class="event__offer">
-                    <span class="event__offer-title">${offerName}</span>
-                    &plus;&euro;&nbsp;
-                    <span class="event__offer-price">${offerPrice}</span>
-                  </li>`;
-    }
-  };
 
   const getDuration = (period) => {
     const timeDifference = [];
@@ -36,6 +23,21 @@ const createWaypointTemplate = (waypoint) => {
     }
     return timeDifference.join(' ');
   };
+
+  const createOfferMarkup = (offer) => {
+    if (offer.isChosen) {
+      const offerName = offer.name;
+      const offerPrice = offer.price;
+      return `<li class="event__offer">
+                    <span class="event__offer-title">${offerName}</span>
+                    &plus;&euro;&nbsp;
+                    <span class="event__offer-price">${offerPrice}</span>
+                  </li>`;
+    }
+  };
+
+  const isFavoriteClass = isFavorite ? ' event__favorite-btn--active' : '';
+
   const OffersMarkup = offers.map(createOfferMarkup).join('');
   const durationText = getDuration(duration);
 
@@ -44,9 +46,9 @@ const createWaypointTemplate = (waypoint) => {
       <div class="event">
         <time class="event__date" datetime="${beginDate}">${startDay}</time>
         <div class="event__type">
-          <img class="event__type-icon" width="42" height="42" src="img/icons/${wayPointType}.png" alt="Event type icon">
+          <img class="event__type-icon" width="42" height="42" src="img/icons/${waypointType}.png" alt="Event type icon">
         </div>
-        <h3 class="event__title">${wayPointType} ${destination}</h3>
+        <h3 class="event__title">${waypointType} ${destination}</h3>
         <div class="event__schedule">
           <p class="event__time">
             <time class="event__start-time" datetime="${startDatetime}">${startTime}</time>
@@ -73,27 +75,36 @@ const createWaypointTemplate = (waypoint) => {
     </li>`;
 };
 
-export default class WaypointView {
-  #element = null;
+export default class EventItemView extends AbstractView {
   #point = null;
 
-  constructor(event) {
-    this.#point = event;
-  }
-
-  get element() {
-    if (!this.#element) {
-      this.#element = createElement(this.template);
-    }
-
-    return this.#element;
+  constructor(point) {
+    super();
+    this.#point = point;
   }
 
   get template() {
     return createWaypointTemplate(this.#point);
   }
 
-  removeElement() {
-    this.#element = null;
+  setEditClickHandler = (callback) => {
+    this._callback.editClick = callback;
+    this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#editClickHandler);
   }
+
+  setFavoriteClickHandler = (callback) => {
+    this._callback.favoriteClick = callback;
+    this.element.querySelector('.event__favorite-btn').addEventListener('click', this.#favoriteClickHandler);
+  }
+
+  #editClickHandler = (evt) => {
+    evt.preventDefault();
+    this._callback.editClick();
+  }
+
+  #favoriteClickHandler = (evt) => {
+    evt.preventDefault();
+    this._callback.favoriteClick();
+  }
+
 }
