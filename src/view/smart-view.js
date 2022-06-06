@@ -1,18 +1,14 @@
-import AbstractView from './abstract-view';
+import AbstractView from './abstract-view.js';
 
 export default class SmartView extends AbstractView {
   _data = {};
 
-  updateData = (update, justDataUpdating) => {
+  updateData = (update) => {
     if (!update) {
       return;
     }
 
     this._data = {...this._data, ...update};
-
-    if (justDataUpdating) {
-      return;
-    }
 
     this.updateElement();
   }
