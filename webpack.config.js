@@ -8,15 +8,15 @@ module.exports = {
   },
   devtool: 'source-map',
   devServer: {
-    hot:false
+      hot: false
   },
   module: {
-    rules:[
-      {
-        test: /\.js$/,
-        exclude: /(node_modules)/,
-        use: ['babel-loader']
-      }
+    rules: [
+        {
+            test: /\.js$/,
+            exclude: /(node_modules)/,
+            use: ['babel-loader']
+          }
     ]
   }
 };

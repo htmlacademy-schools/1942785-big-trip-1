@@ -2,8 +2,10 @@ export const RenderPosition = {
   BEFOREBEGIN: 'beforebegin',
   AFTERBEGIN: 'afterbegin',
   BEFOREEND: 'beforeend',
-  AFTEREND: 'afterend'
+  AFTEREND: 'afterend',
 };
-export const renderTemplate = (container, template, place)=> {
+
+export const renderTemplate = (container, template, place) => {
   container.insertAdjacentHTML(place, template);
 };
+
