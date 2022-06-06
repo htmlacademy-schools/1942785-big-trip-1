@@ -2,49 +2,47 @@ import dayjs from 'dayjs';
 import { destinations } from '../utils/destinations.js';
 import { wayPointTypes } from '../utils/waypointTypes';
 import { generateImages } from '../utils/functions';
+import {createElement} from '../render';
 
-export const createEventAddTemplate = (point) => {
-  const {offers, description, cost } = point;
-  const waypointType = 'Taxi';
+const createEventAddTemplate = (point) => {
+  const {offers, description } = point;
+  const waypointType = 'taxi';
   const templateDatetime = dayjs().add(14, 'day').hour(10).minute(0).format('DD/MM/YY HH:mm');
 
-  const createOffer = (offer) => {
-    const name = offer.name;
-    const price = offer.price;
-    const type = offer.type;
+  const createOfferMarkup = (offer) => {
+    const offerName = offer.name;
+    const offerPrice = offer.price;
+    const offerType = offer.type;
     return `<div class="event__available-offers">
                       <div class="event__offer-selector">
-                        <input class="event__offer-checkbox  visually-hidden" id="event-offer-${type}-1" type="checkbox" name="event-offer-${type}" >
+                        <input class="event__offer-checkbox  visually-hidden" id="event-offer-${offerType}-1" type="checkbox" name="event-offer-${offerType}" >
                         <label class="event__offer-label" for="event-offer-name-1">
-                          <span class="event__offer-title">${name}</span>
+                          <span class="event__offer-title">${offerName}</span>
                           &plus;&euro;&nbsp;
-                          <span class="event__offer-price">${price}</span>
+                          <span class="event__offer-price">${offerPrice}</span>
                         </label>
                       </div>
     `;
   };
-  const addableOfferElements = offers.map(createOffer).join('');
-  const createAddableOfferList = (addableOffers) => {
+
+  const createOffersListMarkup = (addableOffers) => {
     if (addableOffers.length !== 0){
       return `<section class="event__section  event__section--offers">
                     <h3 class="event__section-title  event__section-title--offers">Offers</h3>
-                    ${addableOfferElements}
-                  </section>`;
+                    ${offers.map(createOfferMarkup).join('')}</section>`;
     }
     return '';
   };
 
   const createOptionsLocations = (city) => (`<option value="${city}"></option>`);
-  const createImagesList= (photo) => (`<img className="event__photo" src="${photo}">`);
+  const createPhotoMarkup = (photo) => (`<img className="event__photo" src="${photo}">`);
 
-  const addableOfferList = createAddableOfferList(offers);
   const images = generateImages();
-  const imagesList = images.map(createImagesList).join('');
-  const optionsLocations = destinations().map(createOptionsLocations).join('');
 
-  const createListEventTypeItem = (types =  wayPointTypes(), type) => {
+
+  const createWaypointTypesMarkup = (types =  wayPointTypes(), chosenWaypointType) => {
     const createType = (currentType) => {
-      const isChecked = currentType === type ? 'checked=""' : '';
+      const isChecked = currentType === chosenWaypointType ? 'checked=""' : '';
       const label = currentType.charAt(0).toUpperCase() + currentType.slice(1);
       return `<div class="event__type-item">
                           <input id="event-type-${currentType}-1" class="event__type-input  visually-hidden" type="radio" name="event-type" value="${currentType}" ${isChecked}>
@@ -53,30 +51,36 @@ export const createEventAddTemplate = (point) => {
     };
     return types.map(createType).join('');
   };
-  const listEventTypeItem = createListEventTypeItem(wayPointTypes(), waypointType);
-  const fieldLabel = waypointType.charAt(0).toUpperCase() + waypointType.slice(1);
+  const waypointTypesMarkup = createWaypointTypesMarkup(wayPointTypes(), waypointType);
+
+  const addableOffersMarkup = createOffersListMarkup(offers);
+  const imagesList = images.map(createPhotoMarkup).join('');
+  const optionsLocations = destinations().map(createOptionsLocations).join('');
+  //const waypointTypesMarkup = createEventTypesMarkup(waypointTypes(), waypointType);
+  const waypointTypeLabel = waypointType.charAt(0).toUpperCase() + waypointType.slice(1);
+
 
   return `<li class="trip-events__item">
       <form class="event event--edit" action="#" method="post">
         <header class="event__header">
           <div class="event__type-wrapper">
-            <label class="event__type  event__type-btn" for="event-type-toggle-1">
-              <span class="visually-hidden">Choose event type</span>
-              <img class="event__type-icon" width="17" height="17" src="img/icons/${ waypointType }.png" alt="Event type icon">
-            </label>
-            <input class="event__type-toggle  visually-hidden" id="event-type-toggle-1" type="checkbox">
-            <div class="event__type-list">
-              <fieldset class="event__type-group">
-                <legend class="visually-hidden">Event type</legend>
-                ${ listEventTypeItem }
+          <label class="event__type  event__type-btn" for="event-type-toggle-1">
+          <span class="visually-hidden">Choose event type</span>
+          <img class="event__type-icon" width="17" height="17" src="img/icons/taxi.png" alt="Event type icon">
+        </label>
+        <input class="event__type-toggle  visually-hidden" id="event-type-toggle-1" type="checkbox">
+        <div class="event__type-list">
+          <fieldset class="event__type-group">
+            <legend class="visually-hidden">Event type</legend>            
+          ${ waypointTypesMarkup }
               </fieldset>
             </div>
           </div>
           <div class="event__field-group  event__field-group--destination">
             <label class="event__label  event__type-output" for="event-destination-1">
-            ${ fieldLabel }
+            ${ waypointTypeLabel }
             </label>
-            <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="Geneva" list="destination-list-1">
+            <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="" list="destination-list-1">
             <datalist id="destination-list-1">
             ${ optionsLocations }
             </datalist>
@@ -93,14 +97,12 @@ export const createEventAddTemplate = (point) => {
               <span class="visually-hidden">Price</span>
               &euro;
             </label>
-            <input class="event__input  event__input--price" id="event-price-1" type="text" name="event-price" value="${cost}">
+            <input class="event__input  event__input--price" id="event-price-1" type="text" name="event-price" value="">
           </div>
           <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
           <button class="event__reset-btn" type="reset">Cancel</button>
         </header>
-        <section class="event__details">
-        ${addableOfferList}
-          <section class="event__section  event__section--destination">
+        <section class="event__details">${addableOffersMarkup}<section class="event__section  event__section--destination">
             <h3 class="event__section-title  event__section-title--destination">Destination</h3>
             <p class="event__destination-description">${description}</p>
             <div class="event__photos-container">
@@ -113,3 +115,28 @@ export const createEventAddTemplate = (point) => {
       </form>
     </li>`;
 };
+
+export default class EventAddView {
+  #element = null;
+  #point = null;
+
+  constructor(event) {
+    this.#point = event;
+  }
+
+  get element() {
+    if (!this.#element) {
+      this.#element = createElement(this.template);
+    }
+
+    return this.#element;
+  }
+
+  get template() {
+    return createEventAddTemplate(this.#point);
+  }
+
+  removeElement() {
+    this.#element = null;
+  }
+}
