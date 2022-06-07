@@ -1,84 +1,87 @@
-import TripTabsView from './view/trip-tabs-view.js';
-import StatsView from './view/stats-view.js';
-import {render, RenderPosition, remove} from './utils/render.js';
 import TripPresenter from './presenter/trip-presenter.js';
-import FilterPresenter from './presenter/filter-presenter.js';
-import PointsModel from './model/points-model.js';
+import EventsModel from './model/events-model.js';
 import FilterModel from './model/filter-model.js';
-import {MenuItem} from './utils/const.js';
-import ApiService from './api-service.js';
+import FilterPresenter from './presenter/filter-presenter.js';
+import MenuView from './view/menu-view.js';
+import { MenuItem } from './const.js';
+import { countingStats, clearStats } from './utils/statistic.js';
+import StatisticsView from './view/statistics-view.js';
+import  ApiService  from './api-service';
+import { RenderPosition, render, remove } from './render.js';
 
-const AUTHORIZATION = 'Basic 98yhk35c038h44t';
+const siteMainElement = document.querySelector('.page-main').querySelector('.page-body__container');
+
+const siteMenuContainer = document.querySelector('.trip-controls__navigation');
+
+const siteFilterElement = document.querySelector('.trip-controls__filters');
+
+const buttonAddNewPoint = document.querySelector('.trip-main__event-add-btn');
+
+const tripEventsContainer = document.querySelector('.trip-events');
+
+const siteMenuComponent = new MenuView();
+
+const AUTHORIZATION = 'Basic jbrfbe980ik22789a';
 const END_POINT = 'https://16.ecmascript.pages.academy/big-trip';
 
-const pageMainElement = document.querySelector('.page-body');
-const tripControlsNavigationElement = document.querySelector('.trip-controls__navigation');
-const tripControlsFiltersElement = document.querySelector('.trip-controls__filters');
-tripControlsFiltersElement.classList.add('visually-hidden');
+buttonAddNewPoint.disabled = true;
 
-const apiService = new ApiService(END_POINT, AUTHORIZATION);
-
-const pointsModel = new PointsModel(apiService);
+const eventsModel = new EventsModel(new ApiService(END_POINT, AUTHORIZATION));
 const filterModel = new FilterModel();
 
-const siteMenuComponent = new TripTabsView();
+const tripPresenter = new TripPresenter(tripEventsContainer, eventsModel, filterModel);
+const filterPresenter = new FilterPresenter(siteFilterElement, filterModel, eventsModel);
 
-const tripPresenter = new TripPresenter(pageMainElement, pointsModel, filterModel, apiService);
-const filterPresenter = new FilterPresenter(tripControlsFiltersElement, filterModel, pointsModel);
+tripPresenter.init();
 
-let mode = 'TABLE';
-let statisticsComponent = null;
-
-const handlePointNewFormClose = () => {
-  siteMenuComponent.element.querySelector(`[data-menu-item=${MenuItem.TABLE}]`).classList.remove('visually-hidden');
-  siteMenuComponent.element.querySelector(`[data-menu-item=${MenuItem.STATS}]`).classList.remove('visually-hidden');
-};
+let statsView = null;
 
 const handleSiteMenuClick = (menuItem) => {
   switch (menuItem) {
-    case MenuItem.TABLE:
-      if (mode !== 'TABLE') {
-        filterPresenter.init();
-        tripPresenter.init().finally(() => {
-          remove(statisticsComponent);
-          mode = 'TABLE';
-        });
-      }
+    case MenuItem.EVENTS:
+      tripEventsContainer.classList.add('trip-events');
+      filterPresenter.destroy();
+      tripPresenter.destroy();
+      filterPresenter.init(eventsModel.events);
+      tripPresenter.init();
+      remove(statsView);
+      statsView = null;
+      clearStats();
       break;
-    case MenuItem.STATS:
-      if (mode !== 'STATS') {
-        filterPresenter.destroy();
-        tripPresenter.destroy();
-        statisticsComponent = new StatsView(pointsModel.points);
-        render(pageMainElement, statisticsComponent, RenderPosition.BEFOREEND);
-        mode = 'STATS';
-      }
+    case MenuItem.STATISTICS:
+      tripEventsContainer.classList.remove('trip-events');
+      countingStats(eventsModel.events);
+      statsView = new StatisticsView();
+      render(siteMainElement, statsView, RenderPosition.BEFOREEND);
+      filterPresenter.destroy();
+      tripPresenter.destroy();
+      tripPresenter.renderInfoTrip();
       break;
   }
 };
 
-filterPresenter.init();
-
-tripPresenter.init().finally(() => {
-  pointsModel.init().finally(() => {
-    siteMenuComponent.setMenuClickHandler(handleSiteMenuClick);
-    render(tripControlsNavigationElement, siteMenuComponent, RenderPosition.BEFOREEND);
-    tripControlsFiltersElement.classList.remove('visually-hidden');
-  });
+eventsModel.init().finally(() => {
+  filterPresenter.init(eventsModel.events);
+  render(siteMenuContainer, siteMenuComponent, RenderPosition.BEFOREEND);
+  buttonAddNewPoint.disabled = false;
+  siteMenuComponent.setMenuClickHandler(handleSiteMenuClick);
 });
 
-document.querySelector('.trip-main__event-add-btn').addEventListener('click', (evt) => {
-  evt.target.disabled = true;
+buttonAddNewPoint.addEventListener('click', (evt) => {
   evt.preventDefault();
-  remove(statisticsComponent);
+  evt.target.disabled = true;
+  tripEventsContainer.classList.add('trip-events');
+  const tableLink = document.querySelector('#EVENTS');
+  const statsLink = document.querySelector('#STATISTICS');
+  tableLink.classList.add('trip-tabs__btn--active');
+  statsLink.classList.remove('trip-tabs__btn--active');
   filterPresenter.destroy();
-  filterPresenter.init();
+  filterPresenter.init(eventsModel.events);
   tripPresenter.destroy();
-  tripPresenter.init().finally(() => {
-    tripPresenter.createPoint(handlePointNewFormClose);
-    siteMenuComponent.element.querySelector(`[data-menu-item=${MenuItem.TABLE}]`).classList.add('visually-hidden');
-    siteMenuComponent.element.querySelector(`[data-menu-item=${MenuItem.STATS}]`).classList.add('visually-hidden');
-    mode = 'TABLE';
-  });
+  if(statsView) {
+    remove(statsView);
+  }
+  clearStats();
+  tripPresenter.createEvent();
+  tripPresenter.init();
 });
-

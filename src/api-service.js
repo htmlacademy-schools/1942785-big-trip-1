@@ -2,7 +2,7 @@ const Method = {
   GET: 'GET',
   PUT: 'PUT',
   POST: 'POST',
-  DELETE: 'DELETE'
+  DELETE: 'DELETE',
 };
 
 export default class ApiService {
@@ -14,7 +14,7 @@ export default class ApiService {
     this.#authorization = authorization;
   }
 
-  get points() {
+  get events() {
     return this.#load({url: 'points'})
       .then(ApiService.parseResponse);
   }
@@ -24,36 +24,40 @@ export default class ApiService {
       .then(ApiService.parseResponse);
   }
 
-  get destinations() {
+  get cities() {
     return this.#load({url: 'destinations'})
       .then(ApiService.parseResponse);
   }
 
-  updatePoint = async (point) => {
+  updateEvent = async (event) => {
     const response = await this.#load({
-      url: `points/${point.id}`,
+      url: `points/${event.id}`,
       method: Method.PUT,
-      body: JSON.stringify(this.#adaptToServer(point)),
+      body: JSON.stringify(this.#adaptToServer(event)),
       headers: new Headers({'Content-Type': 'application/json'}),
     });
 
-    return await ApiService.parseResponse(response);
+    const parsedResponse = await ApiService.parseResponse(response);
+
+    return parsedResponse;
   }
 
-  addPoint = async (point) => {
+  addEvent = async (event) => {
     const response = await this.#load({
       url: 'points',
       method: Method.POST,
-      body: JSON.stringify(this.#adaptToServer(point)),
+      body: JSON.stringify(this.#adaptToServer(event)),
       headers: new Headers({'Content-Type': 'application/json'}),
     });
 
-    return await ApiService.parseResponse(response);
+    const parsedResponse = await ApiService.parseResponse(response);
+
+    return parsedResponse;
   }
 
-  deletePoint = async (point) => {
+  deleteEvent = async (event) => {
     const response = await this.#load({
-      url: `points/${point.id}`,
+      url: `points/${event.id}`,
       method: Method.DELETE,
     });
 
@@ -81,23 +85,25 @@ export default class ApiService {
     }
   }
 
-  #adaptToServer = (point) => {
-    const adaptedPoint = {...point,
-      'base_price': point.basePrice,
-      'date_from': point.dateFrom,
-      'date_to': point.dateTo,
-      'is_favorite': point.isFavorite,
-    };
-
-    delete adaptedPoint.basePrice;
-    delete adaptedPoint.dateFrom;
-    delete adaptedPoint.dateTo;
-    delete adaptedPoint.isFavorite;
-
-    return adaptedPoint;
-  }
-
   static parseResponse = (response) => response.json();
+
+  #adaptToServer = (event) => {
+    const adaptedTask = {
+      'base_price': Number(event.basePrice),
+      'date_from': event.date.dataBeginEvent,
+      'date_to': event.date.dataEndEvent,
+      'destination': {
+        'description': event.city.currentCity.description,
+        'name': event.city.currentCity.name,
+        'pictures': event.city.currentCity.pictures,
+      },
+      'id': event.id,
+      'is_favorite': event.favorite,
+      'offers': event.type.currentType.selectedOffers,
+      'type': event.type.currentType.title
+    };
+    return adaptedTask;
+  }
 
   static checkStatus = (response) => {
     if (!response.ok) {
@@ -109,4 +115,3 @@ export default class ApiService {
     throw err;
   }
 }
-

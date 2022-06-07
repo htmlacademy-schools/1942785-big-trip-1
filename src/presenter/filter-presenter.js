@@ -1,33 +1,47 @@
-import FiltersView from '../view/trip-filters-view.js';
-import {render, RenderPosition, replace, remove} from '../utils/render.js';
-import {UpdateType, FilterType} from '../utils/const.js';
+import FilterView from '../view/filter-view.js';
+import { render, RenderPosition, replace, remove } from '../render.js';
+import { FilterType, UpdateType } from '../const.js';
+import { filter } from '../utils/filter.js';
 
 export default class FilterPresenter {
   #filterContainer = null;
-
   #filterModel = null;
-  #pointsModel = null;
+  #eventsModel = null;
 
   #filterComponent = null;
 
-  constructor(filterContainer, filterModel, tasksModel) {
+  constructor(filterContainer, filterModel, eventsModel) {
     this.#filterContainer = filterContainer;
     this.#filterModel = filterModel;
-    this.#pointsModel = tasksModel;
+    this.#eventsModel = eventsModel;
   }
 
   get filters() {
-    return ['everything', 'future', 'past'];
+    const events = this.#eventsModel.events;
+
+    return {
+      [FilterType.EVERYTHING]: {
+        name: 'Everything',
+        count: filter[FilterType.EVERYTHING](events).length,
+      },
+      ['future']: {
+        name: 'Future',
+        count: filter[FilterType.FUTURE](events).length,
+      },
+      [FilterType.PAST]: {
+        name: 'Past',
+        count: filter[FilterType.PAST](events).length,
+      },
+    };
   }
 
   init = () => {
     const filters = this.filters;
     const prevFilterComponent = this.#filterComponent;
 
-    this.#filterComponent = new FiltersView(filters, this.#filterModel.filter);
+    this.#filterComponent = new FilterView(this.#filterModel.filter, filters);
     this.#filterComponent.setFilterTypeChangeHandler(this.#handleFilterTypeChange);
 
-    this.#pointsModel.addObserver(this.#handleModelEvent);
     this.#filterModel.addObserver(this.#handleModelEvent);
 
     if (prevFilterComponent === null) {
@@ -39,18 +53,17 @@ export default class FilterPresenter {
     remove(prevFilterComponent);
   }
 
+  #handleModelEvent = () => {
+    this.init();
+  }
+
   destroy = () => {
     remove(this.#filterComponent);
     this.#filterComponent = null;
 
-    this.#pointsModel.removeObserver(this.#handleModelEvent);
     this.#filterModel.removeObserver(this.#handleModelEvent);
 
     this.#filterModel.setFilter(UpdateType.MAJOR, FilterType.EVERYTHING);
-  }
-
-  #handleModelEvent = () => {
-    this.init();
   }
 
   #handleFilterTypeChange = (filterType) => {
@@ -61,4 +74,3 @@ export default class FilterPresenter {
     this.#filterModel.setFilter(UpdateType.MAJOR, filterType);
   }
 }
-
