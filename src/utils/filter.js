@@ -1,7 +1,8 @@
-import { FilterType } from './sort-consts';
+import { FilterType } from '../types';
+import dayjs from 'dayjs';
 
 export const filter = {
-  [FilterType.EVERYTHING]: (points) => points.filter((point) => point),
-  [FilterType.FUTURE]: (points) => points.filter((point) => new Date(point.dateFrom) > new Date()),
-  [FilterType.PAST]: (points) => points.filter((point) => new Date(point.dateTo) < new Date()),
+  [FilterType.EVERYTHING]: (events) => events,
+  [FilterType.FUTURE]: (events) => events.filter((event) => dayjs().isBefore(dayjs(event.date.dataBeginEvent))),
+  [FilterType.PAST]: (events) => events.filter((event) => dayjs().isAfter(dayjs(event.date.dataBeginEvent))),
 };
