@@ -1,4 +1,4 @@
-import { createElement } from '../render.js';
+import {createElement} from '../utils/render.js';
 
 const SHAKE_ANIMATION_TIMEOUT = 600;
 
@@ -36,3 +36,4 @@ export default class AbstractView {
     }, SHAKE_ANIMATION_TIMEOUT);
   }
 }
+

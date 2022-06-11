@@ -1,21 +1,3 @@
-const getRandomNumber = (firstNumber, secondNumber) => {
-  const maxNumber = Math.max(firstNumber, secondNumber);
-  const minNumber = Math.min(firstNumber, secondNumber);
-  return Math.floor(minNumber + Math.random() * (maxNumber - minNumber + 1));
-};
+import dayjs from 'dayjs';
+export const isDatesEqual = (dateA, dateB) => (dateA === null && dateB === null) || dayjs(dateA).isSame(dateB);
 
-const updateItem = (items, update) => {
-  const index = items.findIndex((item) => item.id === update.id);
-
-  if (index === -1) {
-    return items;
-  }
-
-  return [
-    ...items.slice(0, index),
-    update,
-    ...items.slice(index + 1),
-  ];
-};
-
-export {getRandomNumber, updateItem};

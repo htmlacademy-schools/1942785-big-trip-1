@@ -2,7 +2,7 @@ const Method = {
   GET: 'GET',
   PUT: 'PUT',
   POST: 'POST',
-  DELETE: 'DELETE',
+  DELETE: 'DELETE'
 };
 
 export default class ApiService {
@@ -14,7 +14,7 @@ export default class ApiService {
     this.#authorization = authorization;
   }
 
-  get events() {
+  get points() {
     return this.#load({url: 'points'})
       .then(ApiService.parseResponse);
   }
@@ -24,40 +24,36 @@ export default class ApiService {
       .then(ApiService.parseResponse);
   }
 
-  get cities() {
+  get destinations() {
     return this.#load({url: 'destinations'})
       .then(ApiService.parseResponse);
   }
 
-  updateEvent = async (event) => {
+  updatePoint = async (point) => {
     const response = await this.#load({
-      url: `points/${event.id}`,
+      url: `points/${point.id}`,
       method: Method.PUT,
-      body: JSON.stringify(this.#adaptToServer(event)),
+      body: JSON.stringify(this.#adaptToServer(point)),
       headers: new Headers({'Content-Type': 'application/json'}),
     });
 
-    const parsedResponse = await ApiService.parseResponse(response);
-
-    return parsedResponse;
+    return await ApiService.parseResponse(response);
   }
 
-  addEvent = async (event) => {
+  addPoint = async (point) => {
     const response = await this.#load({
       url: 'points',
       method: Method.POST,
-      body: JSON.stringify(this.#adaptToServer(event)),
+      body: JSON.stringify(this.#adaptToServer(point)),
       headers: new Headers({'Content-Type': 'application/json'}),
     });
 
-    const parsedResponse = await ApiService.parseResponse(response);
-
-    return parsedResponse;
+    return await ApiService.parseResponse(response);
   }
 
-  deleteEvent = async (event) => {
+  deletePoint = async (point) => {
     const response = await this.#load({
-      url: `points/${event.id}`,
+      url: `points/${point.id}`,
       method: Method.DELETE,
     });
 
@@ -85,25 +81,23 @@ export default class ApiService {
     }
   }
 
-  static parseResponse = (response) => response.json();
-
-  #adaptToServer = (event) => {
-    const adaptedTask = {
-      'base_price': Number(event.basePrice),
-      'date_from': event.date.dataBeginEvent,
-      'date_to': event.date.dataEndEvent,
-      'destination': {
-        'description': event.city.currentCity.description,
-        'name': event.city.currentCity.name,
-        'pictures': event.city.currentCity.pictures,
-      },
-      'id': event.id,
-      'is_favorite': event.favorite,
-      'offers': event.type.currentType.selectedOffers,
-      'type': event.type.currentType.title
+  #adaptToServer = (point) => {
+    const adaptedPoint = {...point,
+      'base_price': point.basePrice,
+      'date_from': point.dateFrom,
+      'date_to': point.dateTo,
+      'is_favorite': point.isFavorite,
     };
-    return adaptedTask;
+
+    delete adaptedPoint.basePrice;
+    delete adaptedPoint.dateFrom;
+    delete adaptedPoint.dateTo;
+    delete adaptedPoint.isFavorite;
+
+    return adaptedPoint;
   }
+
+  static parseResponse = (response) => response.json();
 
   static checkStatus = (response) => {
     if (!response.ok) {
@@ -115,3 +109,4 @@ export default class ApiService {
     throw err;
   }
 }
+

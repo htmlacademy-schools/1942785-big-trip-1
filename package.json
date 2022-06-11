@@ -7,7 +7,7 @@
     "eslint": "eslint src/",
     "test": "npm run eslint",
     "build": "webpack --mode development",
-    "start": "webpack serve --mode development --open"
+    "start": "webpack serve --open --mode development"
   },
   "devDependencies": {
     "@babel/core": "7.16.0",
@@ -29,9 +29,10 @@
     "node": "16"
   },
   "dependencies": {
+    "chart.js": "2.9.4",
+    "chartjs-plugin-datalabels": "^0.7.0",
     "dayjs": "1.10.7",
     "flatpickr": "4.6.9",
-    "chart.js": "2.9.4",
-    "chartjs-plugin-datalabels": "0.7.0"
+    "he": "1.2.0"
   }
 }
