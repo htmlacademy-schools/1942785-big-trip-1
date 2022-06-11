@@ -8,7 +8,7 @@ import FilterModel from './model/filter-model.js';
 import {MenuItem} from './utils/const.js';
 import ApiService from './api-service.js';
 
-const AUTHORIZATION = 'Basic 98yhk35c038h44t';
+const AUTHORIZATION = 'Basic jbrfbe980ik22789a';
 const END_POINT = 'https://16.ecmascript.pages.academy/big-trip';
 
 const pageMainElement = document.querySelector('.page-body');
